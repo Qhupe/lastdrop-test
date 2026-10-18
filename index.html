@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>LastDrop Test Rehberi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: single reading column; a battery gauge tracks how many steps the tester has ticked. */
+:root{
+  --bg:#fbf8f7; --surface:#ffffff; --fg:#231a19; --muted:#6e605e; --line:#eadfdc;
+  --accent:#b3261e; --accent-soft:#fbe9e7; --ok:#2e7d4f; --warn:#9a5b00; --warn-soft:#fdf1dc;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Figtree",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171211; --surface:#211a19; --fg:#f3ebe9; --muted:#b4a6a3; --line:#3a2f2d;
+  --accent:#ff8a80; --accent-soft:#3b1f1c; --ok:#7fd4a1; --warn:#f2c46b; --warn-soft:#352a17; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171211; --surface:#211a19; --fg:#f3ebe9; --muted:#b4a6a3; --line:#3a2f2d;
+  --accent:#ff8a80; --accent-soft:#3b1f1c; --ok:#7fd4a1; --warn:#f2c46b; --warn-soft:#352a17; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+.wrap{max-width:760px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:32px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(2rem,6vw,2.8rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.45rem;font-weight:800}
+h3{font-size:1.1rem;font-weight:600}
+p{margin:0;max-width:65ch}
+.eyebrow{font:500 .78rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+header{display:flex;flex-direction:column;gap:14px}
+.lead{color:var(--muted);font-size:1.08rem}
+.gauge{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.cell{position:relative;width:180px;max-width:100%;height:34px;border:3px solid var(--fg);border-radius:8px;padding:3px}
+.cell::after{content:"";position:absolute;right:-9px;top:9px;width:5px;height:10px;background:var(--fg);border-radius:0 3px 3px 0}
+.fill{height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .3s}
+.gauge-txt{font:500 .9rem var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.warn{background:var(--warn-soft);border-color:transparent}
+.warn h3{color:var(--warn)}
+ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+section{display:flex;flex-direction:column;gap:14px}
+.steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 18px 18px 16px;display:grid;grid-template-columns:auto 1fr;gap:6px 14px}
+.step.done{opacity:.62}
+.step input{width:22px;height:22px;margin:3px 0 0;accent-color:var(--accent);cursor:pointer}
+.step input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.step label{cursor:pointer;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;min-width:0}
+.num{font:500 .8rem var(--mono);color:var(--accent)}
+.tag{font:500 .72rem var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.step .body{grid-column:2;display:flex;flex-direction:column;gap:8px;min-width:0}
+.step ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+.expect{font-size:.94rem;color:var(--ok)}
+.expect b{font-weight:600}
+.ui{font-weight:600;white-space:nowrap}
+code,.mono{font-family:var(--mono);font-size:.9em}
+.fb{display:flex;flex-direction:column;gap:10px}
+pre{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;font:500 .88rem/1.7 var(--mono);white-space:pre-wrap;overflow-x:auto}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font:600 .95rem var(--body);background:var(--accent);color:var(--bg);border:0;border-radius:99px;padding:10px 18px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+.small{font-size:.88rem;color:var(--muted)}
+.mail{font-family:var(--mono);user-select:all}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Kapalı test · sürüm 1.0.0</span>
+    <h1>LastDrop Test Rehberi</h1>
+    <p class="lead">Test ettiğiniz için teşekkürler! Aşağıdaki adımlar uygulamanın temel özelliklerini baştan sona deniyor. Hepsi yaklaşık 20 dakika sürer; pil testi ise telefonunuz doğal olarak azaldığında yapılır. Bitirdiğiniz adımları işaretleyebilirsiniz.</p>
+    <div class="gauge" aria-live="polite">
+      <div class="cell" aria-hidden="true"><div class="fill" id="fill"></div></div>
+      <span class="gauge-txt" id="gaugeTxt">%0 · 0/12 adım</span>
+    </div>
+  </header>
+
+  <div class="box warn">
+    <h3>Başlamadan önce</h3>
+    <ul>
+      <li>Android telefon ve Gmail hesabı gerekiyor. Telefonda <b>SIM kart</b> olmalı; SMS'ler sizin numaranızdan gider.</li>
+      <li>Acil durum kişisi olarak <b>kendi ikinci numaranızı</b> ya da önceden haber verdiğiniz bir yakınınızı ekleyin. Bilmeyen birine "ACİL" mesajı gitmesin.</li>
+      <li>Gönderilen SMS'ler operatörünüzün normal SMS ücretine tabidir (paketinizde SMS varsa ek ücret çıkmaz).</li>
+      <li>Uygulamayı <b>14 gün silmeyin</b>; Google yayın izni için bunu şart koşuyor.</li>
+    </ul>
+  </div>
+
+  <section>
+    <h2>Test adımları</h2>
+    <ol class="steps" id="steps">
+
+      <li class="step"><input type="checkbox" id="s1"><label for="s1"><span class="num">01</span><h3>Teste katılın ve indirin</h3></label>
+        <div class="body"><ol>
+          <li>Gruba katılın: <a href="https://groups.google.com/g/lastdrop-test">groups.google.com/g/lastdrop-test</a></li>
+          <li>Play test bağlantısını açıp <span class="ui">Test kullanıcısı olun</span>'a dokunun.</li>
+          <li>Aynı sayfadaki bağlantıdan LastDrop'u Play Store'dan yükleyin.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Play Store'da LastDrop "Erken erişim / test" etiketiyle görünür ve yüklenir.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s2"><label for="s2"><span class="num">02</span><h3>Hesap oluşturun</h3></label>
+        <div class="body"><ol>
+          <li>Uygulamayı açın, <span class="ui">Hesabınız yok mu? Kayıt olun</span>'a dokunun ve e-posta ile kayıt olun.</li>
+          <li>İsterseniz çıkış yapıp <span class="ui">Google ile devam et</span>'i de deneyin.</li>
+          <li><span class="ui">Şifremi unuttum</span> ile sıfırlama e-postasının geldiğini kontrol edin.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Kayıttan sonra kurulum ekranları başlar; sıfırlama e-postası birkaç dakikada gelir (spam klasörüne de bakın).</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s3"><label for="s3"><span class="num">03</span><h3>Kurulum ve izinler</h3></label>
+        <div class="body"><ol>
+          <li>Adınızı yazın; SMS'te bu ad görünecek.</li>
+          <li>İzin ekranında konum için <span class="ui">Her zaman izin ver</span>, SMS ve bildirim için <span class="ui">İzin ver</span> seçin.</li>
+          <li>Xiaomi, Samsung, Huawei, Oppo gibi telefonlarda ekrandaki pil/otomatik başlatma rehberini uygulayın.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Tüm izin satırları yeşile döner ve <span class="ui">Tümü tamam</span> yazar.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s4"><label for="s4"><span class="num">04</span><h3>Acil durum kişisi ekleyin</h3></label>
+        <div class="body"><ol>
+          <li><span class="ui">Kişi ekle</span> ile rehberden ya da elle bir kişi ekleyin (en fazla 5).</li>
+          <li>Bir kişiyi düzenleyin, sonra sola kaydırarak silmeyi deneyin ve tekrar ekleyin.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Kişi listede görünür; silme öncesi onay sorulur.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s5"><label for="s5"><span class="num">05</span><h3>Korumayı başlatın ve kuralları seçin</h3></label>
+        <div class="body"><ol>
+          <li>Ana ekranda <span class="ui">Korumayı başlat</span>'a dokunun.</li>
+          <li><span class="ui">Uyarı kuralları</span>'nda profillere bakın: Dengeli, Erken uyarı, Sadece kritik. Test için <b>Erken uyarı</b>'yı seçin (%20, 15, 10 ve 5'te uyarır).</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Ana ekranda <span class="ui">Koruma açık</span> yazar ve bildirim çubuğunda LastDrop'un kalıcı bildirimi görünür.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s6"><label for="s6"><span class="num">06</span><h3>Mesaj önizleme</h3></label>
+        <div class="body"><ol>
+          <li>Ana ekranda aşağı kaydırıp <span class="ui">Mesaj önizleme</span>'ye dokunun.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Pil uyarısı ve acil durum için gidecek iki mesaj görünür. Bu adımda SMS gönderilmez.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s7"><label for="s7"><span class="num">07</span><h3>ACİL DURUM: iptal</h3><span class="tag">SMS yok</span></label>
+        <div class="body"><ol>
+          <li>Ana ekrandaki kırmızı <span class="ui">ACİL DURUM</span> butonuna basın.</li>
+          <li>5 saniyelik geri sayım bitmeden <span class="ui">İptal</span>'e dokunun.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Geri sayım durur, hiçbir SMS gitmez.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s8"><label for="s8"><span class="num">08</span><h3>ACİL DURUM: gönderim</h3><span class="tag">SMS gider</span></label>
+        <div class="body"><ol>
+          <li>İsterseniz önce <span class="ui">Acil durum butonu</span> ayarlarından kendi mesajınızı yazın.</li>
+          <li><span class="ui">ACİL DURUM</span>'a tekrar basın ve geri sayımın bitmesini bekleyin.</li>
+          <li>Alıcı telefonda gelen SMS'teki Google Haritalar bağlantısını açın.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> SMS sizin numaranızdan gelir; mesaj, pil yüzdesi ve doğru konum bağlantısı içerir. Uyarı <span class="ui">Son uyarılar</span> listesinde görünür.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s9"><label for="s9"><span class="num">09</span><h3>Ana ekran widget'ı</h3></label>
+        <div class="body"><ol>
+          <li><span class="ui">Acil durum butonu</span> ayarlarında <span class="ui">Ana ekrana ekle</span>'ye dokunun (ya da ana ekranda boş bir yere uzun basıp Widget'lar → LastDrop).</li>
+          <li>Widget'a dokunun; 10 saniyelik geri sayım başlar. <b>✕</b> ile iptal edin.</li>
+          <li>İsterseniz bir kez de süreyi doldurun.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Uygulama açılmadan widget üzerinde geri sayım görünür; ✕ ile iptal edilir, süre dolunca SMS gider.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s10"><label for="s10"><span class="num">10</span><h3>Pil uyarısı (asıl özellik)</h3><span class="tag">birkaç gün içinde</span></label>
+        <div class="body"><ol>
+          <li>Şarj aletini çıkarın ve telefonu normal kullanın; uygulamayı kapatabilirsiniz.</li>
+          <li>Pil %20'ye düştüğünde (Erken uyarı profili) kişinize SMS gitmeli. Telefonu şarja takınca uyarılar sıfırlanır.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Her seviyede yalnızca <b>bir</b> SMS gider; aynı uyarı tekrar tekrar gelmez. Gelmezse telefon modelinizi bize yazın, bu en değerli geri bildirimdir.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s11"><label for="s11"><span class="num">11</span><h3>Yeniden başlatma</h3></label>
+        <div class="body"><ol>
+          <li>Telefonu kapatıp açın, uygulamayı açmadan bekleyin.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> LastDrop bildirimi kendiliğinden geri gelir; koruma açık kalır.</p></div></li>
+
+      <li class="step"><input type="checkbox" id="s12"><label for="s12"><span class="num">12</span><h3>Aile ekranı</h3><span class="tag">isteğe bağlı · 2 telefon</span></label>
+        <div class="body"><ol>
+          <li>Korunan telefonda sağ üstteki aile simgesi → <span class="ui">Kod oluştur</span>.</li>
+          <li>İkinci telefonda (ayrı bir LastDrop hesabıyla) aynı ekrana kodu girip <span class="ui">Eşleş</span>'e dokunun.</li>
+          <li>Ebeveyn telefonunda <span class="ui">Takibi bırak</span>'ı deneyin.</li>
+        </ol>
+        <p class="expect"><b>Beklenen:</b> Ebeveyn telefonunda pil yüzdesi, koruma durumu, son konum ve son uyarılar görünür.</p></div></li>
+    </ol>
+  </section>
+
+  <div class="box">
+    <h3>Ek olarak denemek isterseniz</h3>
+    <ul>
+      <li><b>Dil:</b> Telefon dilini İngilizce yapın; uygulama İngilizceye geçer, SMS'ler İngilizce gider.</li>
+      <li><b>Telefon değiştirme:</b> Aynı hesapla başka bir telefona girin; eski telefonda koruma durur ve bildirim çıkar.</li>
+      <li><b>Hesap silme:</b> Testin sonunda <span class="ui">Hesabımı sil</span>'i deneyebilirsiniz. Uygulamayı ise 14 gün dolana kadar silmeyin.</li>
+    </ul>
+  </div>
+
+  <section class="fb">
+    <h2>Geri bildirim</h2>
+    <p>Bir sorun görürseniz ya da bir öneriniz varsa aşağıdaki şablonu doldurup e-posta ile gönderin. Ekran görüntüsü eklemek çok yardımcı olur.</p>
+    <p>Adres: <span class="mail">kopar.mobapp@gmail.com</span></p>
+<pre id="tpl">Telefon modeli: (ör. Xiaomi Redmi Note 12)
+Android sürümü: (Ayarlar › Telefon hakkında)
+Adım numarası: (ör. 08)
+Ne yaptım:
+Ne bekliyordum:
+Ne oldu:
+Ekran görüntüsü: (ekleyin)</pre>
+    <div class="row"><button type="button" id="copy">Şablonu kopyala</button><span class="small" id="copyMsg" aria-live="polite"></span></div>
+  </section>
+
+  <p class="small">LastDrop · KOPAR Mobile Apps. Uygulama SMS okumaz, sürekli konum takibi yapmaz; konum yalnızca uyarı anında alınır.</p>
+</div>
+
+<script>
+(function(){
+  var KEY='lastdrop-test-steps', boxes=[].slice.call(document.querySelectorAll('.step input')), saved={};
+  try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+  function render(){
+    var n=0;boxes.forEach(function(b){b.closest('.step').classList.toggle('done',b.checked);if(b.checked)n++});
+    var pct=Math.round(n/boxes.length*100);
+    document.getElementById('fill').style.width=pct+'%';
+    document.getElementById('gaugeTxt').textContent='%'+pct+' · '+n+'/'+boxes.length+' adım';
+  }
+  boxes.forEach(function(b){b.checked=!!saved[b.id];b.addEventListener('change',function(){saved[b.id]=b.checked;try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}render()})});
+  render();
+  document.getElementById('copy').addEventListener('click',function(){
+    var t=document.getElementById('tpl').textContent,m=document.getElementById('copyMsg');
+    function fallback(){var r=document.createRange();r.selectNodeContents(document.getElementById('tpl'));var s=getSelection();s.removeAllRanges();s.addRange(r);m.textContent='Metin seçildi, kopyalayabilirsiniz.'}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){m.textContent='Kopyalandı.'},fallback)}else fallback();
+  });
+})();
+</script>
+</body>
+</html>
